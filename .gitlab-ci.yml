@@ -1,0 +1,28 @@
+#obtain NAME_CONTAINERS from last slash from gitlab image, check in: https://gitlab.com/GROUP_NAME/NAME_REPO/container_registry
+docker-build:
+  services:
+    - docker:18.09.7-dind
+  variables:
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+
+  image: docker:latest
+  stage: build
+
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl
+  variables:
+    NAME_APP: nombre-app
+    NAME_CONTAINERS: NAME_REPO 
+  script:
+    - kubectl get deployment "$NAME_APP" || kubectl create deployment "$NAME_APP" --image="$CI_REGISTRY_IMAGE"
+    - kubectl set image deployment/"$NAME_APP" "$NAME_CONTAINERS"="$CI_REGISTRY_IMAGE":"$CI_COMMIT_SHA"

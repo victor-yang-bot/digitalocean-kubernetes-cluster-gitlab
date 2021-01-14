@@ -1,0 +1,22 @@
+habilitar permisos y preparar entorno
+kubectl.exe apply -f clusterrole.yaml
+kubectl.exe apply -f clusterrolebinding.yaml
+kubectl.exe apply -f clustergitlabcontainer.yaml
+kubectl.exe apply -f setdeployment.yaml
+kubectl.exe apply -f setservice.yaml
+kubectl.exe apply -f setingress.yaml
+
+
+editar para buscar credenciales en regcred
+kubectl -n gitlab-managed-apps edit deployment nombre-app
+
+agregar access token (creados en gitlab)
+kubectl -n gitlab-managed-apps delete secret regcred
+kubectl -n gitlab-managed-apps create secret docker-registry regcred --docker-server=registry.gitlab.com --docker-username=k8s --docker-password=***
+
+kubectl -n gitlab-managed-apps expose deployment backend-nubemotic --type NodePort --port 3000
+kubectl -n gitlab-managed-apps get ingress
+kubectl -n gitlab-managed-apps edit service backend-nubemotic 
+
+kubectl get po -n ingress-nginx
+kubectl exec -n ingress-nginx -it nginx-ingress-ingress-nginx-controller-7898d5969d-vp9nq -- cat /etc/nginx/nginx.conf

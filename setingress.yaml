@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: test-ingress
+  namespace: gitlab-managed-apps
+spec:
+  rules:
+  - host: ingress.nubemotic.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: backend-nubemotic
+            port:
+              number: 3000
